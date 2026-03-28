@@ -18,10 +18,10 @@ jobs:
         with:
           node-version: 18
 
-      - name: Clean install (fix tailwind bug)
+      - name: Install dependencies (fix native binding)
         run: |
-          rm -rf node_modules package-lock.json
-          npm install
+          npm install --force
+          npm rebuild
 
       - name: Build project
         run: npm run build
