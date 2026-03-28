@@ -33,3 +33,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SHIV15 }}
           channelId: live
           projectId: shiv15
+    env:
+      CI: false
