@@ -1,0 +1,7 @@
+{
+  "name": "SevaSetu",
+  "description": "AI-powered trusted caregiving network for Bharat, connecting hearts and caring hands.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

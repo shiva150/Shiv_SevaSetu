@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "shivabalajikontham@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidBooking(data) {
+      return data.id is string &&
+             data.seeker_id is string &&
+             data.caregiver_id is string &&
+             data.status in ['pending', 'confirmed', 'completed', 'cancelled'] &&
+             data.timestamp is number &&
+             data.totalAmount is number;
+    }
+
+    function isValidProgress(data) {
+      return data.user_id is string && data.user_id == request.auth.uid &&
+             data.module_id is string &&
+             data.completed is bool;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Caregivers — PUBLIC READ so the app works before sign-in
+    match /caregivers/{caregiverId} {
+      allow read: if true;
+      allow create: if isAuthenticated() || isAdmin();
+      allow update: if isAuthenticated() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Bookings
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidBooking(request.resource.data);
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // Learning modules — PUBLIC READ
+    match /learning_modules/{moduleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Progress
+    match /progress/{progressId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidProgress(request.resource.data);
+    }
+
+    // Escrows
+    match /escrows/{escrowId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+    }
+
+    // Alerts (SOS)
+    match /alerts/{alertId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+    }
+  }
+}
