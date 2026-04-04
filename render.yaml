@@ -1,0 +1,70 @@
+services:
+  - type: web
+    name: sevasetu-api
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Firebase Admin SDK — set these in the Render dashboard
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIRESTORE_DATABASE_ID
+        sync: false
+
+      # JWT — auto-generated secure random secrets
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+
+      # CORS — set to your Vercel frontend URL after deploying
+      # e.g. "https://sevasetu.vercel.app,http://localhost:3000"
+      - key: CORS_ORIGINS
+        sync: false
+
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+
+      # Redis — leave empty to disable caching (no Redis addon needed)
+      - key: REDIS_URL
+        value: ""
+
+      # Gemini AI
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # Pinata IPFS
+      - key: PINATA_API_KEY
+        sync: false
+      - key: PINATA_SECRET_KEY
+        sync: false
+
+      # Blockchain (Polygon Mumbai testnet)
+      - key: BLOCKCHAIN_RPC_URL
+        value: https://rpc-mumbai.maticvigil.com
+      - key: ESCROW_CONTRACT_ADDRESS
+        value: "0x0000000000000000000000000000000000000000"
+      - key: NFT_CONTRACT_ADDRESS
+        value: "0x0000000000000000000000000000000000000000"
+      - key: PLATFORM_WALLET_PRIVATE_KEY
+        sync: false
+
+      # Demo / onboarding settings
+      - key: AUTO_APPROVE_CAREGIVERS
+        value: "true"
+      - key: ADMIN_PHONE
+        value: "9999999999"

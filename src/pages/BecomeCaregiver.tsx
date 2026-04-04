@@ -280,7 +280,7 @@ export const BecomeCaregiver = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-bold text-on-surface">Hourly Rate (&#8377;)</label>
+                    <label className="text-sm font-bold text-on-surface">Hourly Rate (SC)</label>
                     <input
                       type="number" value={formData.hourlyRate}
                       onChange={e => setFormData(p => ({ ...p, hourlyRate: parseInt(e.target.value) || 0 }))}

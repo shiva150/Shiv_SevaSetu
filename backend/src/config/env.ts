@@ -1,8 +1,10 @@
 import dotenv from 'dotenv';
-import path from 'path';
 import { z } from 'zod';
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load .env only in development — in production (Render/etc.) env vars are
+// injected directly into process.env by the platform. dotenv is a no-op when
+// the file doesn't exist.
+dotenv.config();
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
@@ -14,8 +16,8 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().min(1),
   FIRESTORE_DATABASE_ID: z.string().min(1),
 
-  // Redis
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  // Redis — optional in production; leave empty to disable caching
+  REDIS_URL: z.string().default(''),
 
   // JWT
   JWT_ACCESS_SECRET: z.string().min(32),
@@ -23,8 +25,9 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
-  // CORS
-  CORS_ORIGIN: z.string().default('http://localhost:3000'),
+  // CORS — comma-separated list of allowed origins
+  // e.g. "http://localhost:3000,https://sevasetu.vercel.app"
+  CORS_ORIGINS: z.string().default('http://localhost:3000'),
 
   // Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'debug']).default('info'),
@@ -35,7 +38,7 @@ const envSchema = z.object({
   NFT_CONTRACT_ADDRESS: z.string().default('0x0000000000000000000000000000000000000000'),
   PLATFORM_WALLET_PRIVATE_KEY: z.string().min(1),
 
-  // Python AI microservice
+  // Python AI microservice (optional)
   AI_SERVICE_URL: z.string().url().default('http://localhost:8000'),
 
   // Pinata IPFS
@@ -45,7 +48,7 @@ const envSchema = z.object({
   // Gemini AI
   GEMINI_API_KEY: z.string().default(''),
 
-  // Demo / onboarding
+  // Demo settings
   AUTO_APPROVE_CAREGIVERS: z.enum(['true', 'false']).default('false'),
   ADMIN_PHONE: z.string().default('9999999999'),
 });
