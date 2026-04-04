@@ -2,83 +2,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAuthenticated() {
-      return request.auth != null;
-    }
+    // ── Public read collections ───────────────────────────────────────────
+    // Caregivers and learning modules are readable by unauthenticated clients
+    // (discovery / public listing). All writes go through the Node backend
+    // using the Admin SDK which bypasses these rules entirely.
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         (request.auth.token.email == "shivabalajikontham@gmail.com" && request.auth.token.email_verified == true));
-    }
-
-    function isValidBooking(data) {
-      return data.id is string &&
-             data.seeker_id is string &&
-             data.caregiver_id is string &&
-             data.status in ['pending', 'confirmed', 'completed', 'cancelled'] &&
-             data.timestamp is number &&
-             data.totalAmount is number;
-    }
-
-    function isValidProgress(data) {
-      return data.user_id is string && data.user_id == request.auth.uid &&
-             data.module_id is string &&
-             data.completed is bool;
-    }
-
-    // Users
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Caregivers — PUBLIC READ so the app works before sign-in
-    match /caregivers/{caregiverId} {
+    match /caregivers/{id} {
       allow read: if true;
-      allow create: if isAuthenticated() || isAdmin();
-      allow update: if isAuthenticated() || isAdmin();
-      allow delete: if isAdmin();
+      allow write: if false; // Admin SDK only
     }
 
-    // Bookings
-    match /bookings/{bookingId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isValidBooking(request.resource.data);
-      allow update: if isAuthenticated();
-      allow delete: if isAdmin();
-    }
-
-    // Learning modules — PUBLIC READ
-    match /learning_modules/{moduleId} {
+    match /learning_modules/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // Admin SDK only
     }
 
-    // Progress
-    match /progress/{progressId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && isValidProgress(request.resource.data);
+    // ── Backend-only collections ──────────────────────────────────────────
+    // These are never touched by client SDKs. The Node backend uses Admin SDK.
+
+    match /users/{id} {
+      allow read: if request.auth != null && request.auth.uid == id;
+      allow write: if false;
     }
 
-    // Escrows
-    match /escrows/{escrowId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
+    match /care_requests/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
-    // Alerts (SOS)
-    match /alerts/{alertId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAdmin();
+    match /matches/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /sessions/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /payments/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /ratings/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /sos_alerts/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /module_progress/{id} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /refresh_tokens/{id} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Internal health check — blocked from all clients
+    match /_health/{id} {
+      allow read, write: if false;
+    }
+
+    // Catch-all: deny everything not explicitly listed
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
